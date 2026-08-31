@@ -33,10 +33,27 @@ if __name__ == '__main__':
             print(email+'----结果--'+mess+'----剩余('+time+')天')  # 日志输出
             sendContent += email+'----'+mess+'----剩余('+time+')天\n'
         else:
-            requests.get('http://www.pushplus.plus/send?token=' + sckey + '&content='+email+'cookie已失效')
-            print('cookie已失效')  # 日志输出
-     #--------------------------------------------------------------------------------------------------------#   
-    if sckey != "":
-         requests.get('http://www.pushplus.plus/send?token=' + sckey + '&title='+email+'签到成功'+'&content='+sendContent)
+            print(f'{email} cookie已失效')
+            sendContent += f'{email} cookie已失效\n'
 
+    if sckey != "":
+        try:
+            push_url = "https://www.pushplus.plus/send"
+            res = requests.post(push_url, json={
+                "token": sckey,
+                "title": f"{email} GLaDOS签到结果",
+                "content": sendContent.replace('\n', '<br/>'),
+                "template": "html"
+            }, timeout=10)
+            print("PushPlus 推送响应:", res.text)
+        except Exception as e:
+            print("PushPlus 推送失败:", e)
+
+    # 兼容 Bark 推送 (iOS)
+    bark_key = os.environ.get("BARK_KEY", "")
+    if bark_key:
+        try:
+            requests.get(f"https://api.day.app/{bark_key}/GLaDOS签到通知/{sendContent}", timeout=10)
+        except Exception as e:
+            print("Bark 推送失败:", e)
 

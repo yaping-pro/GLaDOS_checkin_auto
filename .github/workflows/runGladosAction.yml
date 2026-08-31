@@ -30,5 +30,6 @@ jobs:
           python3 glados.py
         env: 
           GLADOS_COOKIE: "${{ secrets.GLADOS_COOKIE }}"
+          BARK_KEY: ${{ secrets.BARK_KEY }}
           PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
       - uses: liskin/gh-workflow-keepalive@v1
