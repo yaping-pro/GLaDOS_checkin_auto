@@ -32,4 +32,6 @@ jobs:
           GLADOS_COOKIE: "${{ secrets.GLADOS_COOKIE }}"
           BARK_KEY: ${{ secrets.BARK_KEY }}
           PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
+          FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
+          FEISHU_SECRET: ${{ secrets.FEISHU_SECRET }}
       - uses: liskin/gh-workflow-keepalive@v1

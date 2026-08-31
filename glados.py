@@ -1,4 +1,4 @@
-import requests,json,os
+import requests, json, os, time, hmac, hashlib, base64
 # -------------------------------------------------------------------------------------------
 # github workflows
 # -------------------------------------------------------------------------------------------
@@ -56,4 +56,37 @@ if __name__ == '__main__':
             requests.get(f"https://api.day.app/{bark_key}/GLaDOS签到通知/{sendContent}", timeout=10)
         except Exception as e:
             print("Bark 推送失败:", e)
+
+    # 飞书机器人推送
+    feishu_webhook = os.environ.get("FEISHU_WEBHOOK", "")
+    feishu_secret = os.environ.get("FEISHU_SECRET", "")
+    if feishu_webhook:
+        try:
+            timestamp = str(int(time.time()))
+            feishu_payload = {
+                "msg_type": "post",
+                "content": {
+                    "post": {
+                        "zh_cn": {
+                            "title": "🎉 GLaDOS 自动签到通知",
+                            "content": [
+                                [
+                                    {"tag": "text", "text": sendContent.strip()}
+                                ]
+                            ]
+                        }
+                    }
+                }
+            }
+            if feishu_secret:
+                string_to_sign = f'{timestamp}\n{feishu_secret}'
+                hmac_code = hmac.new(string_to_sign.encode("utf-8"), digestmod=hashlib.sha256).digest()
+                sign = base64.b64encode(hmac_code).decode('utf-8')
+                feishu_payload["timestamp"] = timestamp
+                feishu_payload["sign"] = sign
+
+            res = requests.post(feishu_webhook, json=feishu_payload, timeout=10)
+            print("飞书推送响应:", res.text)
+        except Exception as e:
+            print("飞书推送失败:", e)
 
