@@ -14,26 +14,65 @@ if __name__ == '__main__':
         cookies = []
         exit(0)
     url= "https://glados.rocks/api/user/checkin"
-    url2= "https://glados.rocks/api/user/status"
+    url2 = "https://glados.rocks/api/user/status"
+    url3 = "https://glados.rocks/api/user/points"
     referer = 'https://glados.rocks/console/checkin'
     origin = "https://glados.rocks"
     useragent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36"
-    payload={
+    payload = {
         'token': 'glados.one'
     }
+    has_warning = False
     for cookie in cookies:
-        checkin = requests.post(url,headers={'cookie': cookie ,'referer': referer,'origin':origin,'user-agent':useragent,'content-type':'application/json;charset=UTF-8'},data=json.dumps(payload))
-        state =  requests.get(url2,headers={'cookie': cookie ,'referer': referer,'origin':origin,'user-agent':useragent})
-    #--------------------------------------------------------------------------------------------------------#  
-        days_left = state.json()['data']['leftDays'].split('.')[0]
-        email = state.json()['data']['email']
+        headers = {'cookie': cookie, 'referer': referer, 'origin': origin, 'user-agent': useragent}
+        checkin = requests.post(url, headers={**headers, 'content-type': 'application/json;charset=UTF-8'}, data=json.dumps(payload))
+        state = requests.get(url2, headers=headers)
+        points_req = requests.get(url3, headers=headers)
+
+        try:
+            days_left = int(float(state.json()['data']['leftDays']))
+        except Exception:
+            days_left = 0
+
+        try:
+            points = int(float(points_req.json().get('points', 0)))
+        except Exception:
+            points = 0
+
+        email = state.json().get('data', {}).get('email', '未知用户')
+
         if 'message' in checkin.text:
             mess = checkin.json()['message']
-            print(f'{email}----结果--{mess}----剩余({days_left})天')  # 日志输出
-            sendContent += f'{email}----{mess}----剩余({days_left})天\n'
+            print(f'{email}----结果--{mess}----积分({points})----剩余({days_left})天')
+            lines = [
+                f"👤 账号：{email}",
+                f"📝 签到结果：{mess}",
+                f"💰 当前结余积分：{points} 分",
+                f"⏳ 剩余服务天数：{days_left} 天"
+            ]
+            if days_left <= 7:
+                has_warning = True
+                lines.append(f"\n⚠️【到期预警】服务仅剩 {days_left} 天，请及时续期！")
+                if points >= 500:
+                    lines.append(f"💡 当前积分充足（{points}分），强烈推荐前往控制台兑换【500积分 = 100天】！")
+                elif points >= 200:
+                    lines.append(f"💡 当前可兑换【200积分 = 30天】进行续命过渡（剩余 {points} 分）！")
+                elif points >= 100:
+                    lines.append(f"💡 当前可兑换【100积分 = 10天】（剩余 {points} 分）！")
+                else:
+                    lines.append(f"⚠️ 积分仅剩 {points} 分，不足最低兑换门槛（100分），请留意服务中断！")
+            else:
+                if points < 200:
+                    lines.append(f"🎯 积分目标：距离 200 分（30天续期档）还差 {200 - points} 分")
+                elif points < 500:
+                    lines.append(f"🎯 积分目标：已达成 200 分档！距离 500 分（永久续期档）还差 {500 - points} 分")
+                else:
+                    lines.append(f"🎉 积分已达 {points} 分！可随时兑换 500 积分 = 100 天！")
+            sendContent += "\n".join(lines) + "\n\n"
         else:
             print(f'{email} cookie已失效')
-            sendContent += f'{email} cookie已失效\n'
+            sendContent += f'{email} cookie已失效，请重新获取 Cookie 更新 Secrets！\n\n'
+            has_warning = True
 
     if sckey != "":
         try:
@@ -67,7 +106,7 @@ if __name__ == '__main__':
                 "content": {
                     "post": {
                         "zh_cn": {
-                            "title": "🎉 GLaDOS 自动签到通知",
+                            "title": "⚠️ GLaDOS 续期预警通知" if has_warning else "🎉 GLaDOS 自动签到通知",
                             "content": [
                                 [
                                     {"tag": "text", "text": sendContent.strip()}
