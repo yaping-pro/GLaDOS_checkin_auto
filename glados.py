@@ -19,9 +19,9 @@ if __name__ == '__main__':
     url_exchange = "https://glados.rocks/api/user/exchange"
     referer = 'https://glados.rocks/console/checkin'
     origin = "https://glados.rocks"
-    useragent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36"
+    useragent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
     payload = {
-        'token': 'glados.one'
+        'token': 'glados.rocks'
     }
     has_warning = False
     has_cookie_expired = False
