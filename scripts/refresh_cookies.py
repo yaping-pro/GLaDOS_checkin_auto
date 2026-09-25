@@ -59,19 +59,23 @@ def login_with_code(email: str, code: str) -> str:
                 print(f"❌ [{email}] 登录失败: {data.get('message', '未知错误')}")
                 return ""
             
-            # 从 Set-Cookie 响应头中抓取 koa:sess 与 koa:sess.sig
+            # 从 Set-Cookie 响应头中抓取 session cookie (gld:sess 或 koa:sess)
             set_cookies = resp.headers.get_all("Set-Cookie") or []
             cookie_dict = {}
             for item in set_cookies:
                 parts = item.split(";")[0].split("=", 1)
                 if len(parts) == 2:
                     k, v = parts[0].strip(), parts[1].strip()
-                    if k in ("koa:sess", "koa:sess.sig"):
+                    if k in ("gld:sess", "gld:sess.sig", "koa:sess", "koa:sess.sig"):
                         cookie_dict[k] = v
             
-            if "koa:sess" in cookie_dict and "koa:sess.sig" in cookie_dict:
+            if "gld:sess" in cookie_dict and "gld:sess.sig" in cookie_dict:
+                cookie_str = f"gld:sess={cookie_dict['gld:sess']}; gld:sess.sig={cookie_dict['gld:sess.sig']}"
+                print(f"🎉 [{email}] 登录成功！已成功提取最新 Cookie ({cookie_str[:30]}...)")
+                return cookie_str
+            elif "koa:sess" in cookie_dict and "koa:sess.sig" in cookie_dict:
                 cookie_str = f"koa:sess={cookie_dict['koa:sess']}; koa:sess.sig={cookie_dict['koa:sess.sig']}"
-                print(f"🎉 [{email}] 登录成功！已成功提取最新 Cookie")
+                print(f"🎉 [{email}] 登录成功！已成功提取最新 Cookie ({cookie_str[:30]}...)")
                 return cookie_str
             else:
                 print(f"⚠️ [{email}] 登录成功但未提取到完整 Session Cookie: {set_cookies}")
