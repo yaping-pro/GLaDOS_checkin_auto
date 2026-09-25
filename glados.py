@@ -53,11 +53,10 @@ if __name__ == '__main__':
         is_invalid = (
             not email or
             state_json.get('code') != 0 or
-            checkin_json.get('code') in [-2, 1, 401, 403] or
+            checkin_json.get('code') in [-2, 401, 403] or
             '没有权限' in checkin.text or
             'Please Login' in checkin.text
         )
-
         if is_invalid:
             has_cookie_expired = True
             print(f'账号[{idx}]----结果--Cookie已失效(鉴权失败)----')
