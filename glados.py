@@ -1,9 +1,12 @@
 import requests, json, os, time, hmac, hashlib, base64
 
 
-def send_telegram(title, content):
-    """Telegram 主通道：按 4000 字符切分，纯文本发送，避免 HTML 解析失败。"""
-    token = os.environ.get("TG_BOT_TOKEN", "")
+def send_telegram(title, content, token=""):
+    """Telegram 主通道：按 4000 字符切分，纯文本发送，避免 HTML 解析失败。
+
+    token 缺省回退 TG_BOT_TOKEN；调用方按严重度选择 alerts（P1）或 digest（P2）。
+    """
+    token = token or os.environ.get("TG_BOT_TOKEN", "")
     chat = os.environ.get("TG_CHAT_ID", "")
     api = os.environ.get("TG_API_HOST", "https://tg.yaping.dpdns.org").rstrip("/")
     if not token or not chat:
@@ -223,6 +226,9 @@ if __name__ == '__main__':
         except Exception as e:
             print("飞书推送失败:", e)
 
-    # Telegram 推送（主力通道）
-    send_telegram(notice_title, sendContent)
+    # Telegram 推送（主力通道）：Cookie 失效属 P1 走 alerts，其余日常结果走 digest
+    if has_cookie_expired:
+        send_telegram(notice_title, sendContent, os.environ.get("TG_ALERTS_BOT_TOKEN", ""))
+    else:
+        send_telegram(notice_title, sendContent, os.environ.get("TG_DIGEST_BOT_TOKEN", ""))
 

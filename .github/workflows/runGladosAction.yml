@@ -34,7 +34,8 @@ jobs:
           PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
           FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
           FEISHU_SECRET: ${{ secrets.FEISHU_SECRET }}
-          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_ALERTS_BOT_TOKEN: ${{ secrets.TG_ALERTS_BOT_TOKEN }}
+          TG_DIGEST_BOT_TOKEN: ${{ secrets.TG_DIGEST_BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
           # GitHub runner 在墙外，直连官方 API；tg.yaping 反代会被 CF 挑战页拦截
           TG_API_HOST: https://api.telegram.org
