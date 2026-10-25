@@ -38,8 +38,6 @@ def send_telegram(title, content, token=""):
 # github workflows
 # -------------------------------------------------------------------------------------------
 if __name__ == '__main__':
-# pushplus秘钥 申请地址 http://www.pushplus.plus
-    sckey = os.environ.get("PUSHPLUS_TOKEN", "")
 # 推送内容
     sendContent = ''
 # glados账号cookie 直接使用数组 如果使用环境变量需要字符串分割一下
@@ -171,19 +169,6 @@ if __name__ == '__main__':
         notice_title = "⚠️ GLaDOS 续期预警通知"
     else:
         notice_title = "🎉 GLaDOS 自动签到通知"
-
-    if sckey != "":
-        try:
-            push_url = "https://www.pushplus.plus/send"
-            res = requests.post(push_url, json={
-                "token": sckey,
-                "title": notice_title,
-                "content": sendContent.replace('\n', '<br/>'),
-                "template": "html"
-            }, timeout=10)
-            print("PushPlus 推送响应:", res.text)
-        except Exception as e:
-            print("PushPlus 推送失败:", e)
 
     # 兼容 Bark 推送 (iOS)
     bark_key = os.environ.get("BARK_KEY", "")
