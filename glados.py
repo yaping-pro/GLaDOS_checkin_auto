@@ -1,4 +1,36 @@
 import requests, json, os, time, hmac, hashlib, base64
+
+
+def send_telegram(title, content):
+    """Telegram 主通道：按 4000 字符切分，纯文本发送，避免 HTML 解析失败。"""
+    token = os.environ.get("TG_BOT_TOKEN", "")
+    chat = os.environ.get("TG_CHAT_ID", "")
+    api = os.environ.get("TG_API_HOST", "https://tg.yaping.dpdns.org").rstrip("/")
+    if not token or not chat:
+        return
+    text = f"{title}\n\n{content.strip()}"
+    chunks, cur = [], ""
+    for line in text.splitlines(keepends=True):
+        if cur and len(cur) + len(line) > 4000:
+            chunks.append(cur)
+            cur = line
+        else:
+            cur += line
+    if cur:
+        chunks.append(cur)
+    for i, chunk in enumerate(chunks, 1):
+        prefix = f"({i}/{len(chunks)})\n" if len(chunks) > 1 else ""
+        try:
+            res = requests.post(
+                f"{api}/bot{token}/sendMessage",
+                data={"chat_id": chat, "text": prefix + chunk},
+                timeout=15,
+            )
+            print(f"Telegram 推送响应[{i}/{len(chunks)}]:", res.text[:200])
+        except Exception as e:
+            print("Telegram 推送失败:", e)
+
+
 # -------------------------------------------------------------------------------------------
 # github workflows
 # -------------------------------------------------------------------------------------------
@@ -190,4 +222,7 @@ if __name__ == '__main__':
             print("飞书推送响应:", res.text)
         except Exception as e:
             print("飞书推送失败:", e)
+
+    # Telegram 推送（主力通道）
+    send_telegram(notice_title, sendContent)
 
