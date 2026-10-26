@@ -2,6 +2,12 @@ name: 开始每日签到
 
 on:
   workflow_dispatch:
+    inputs:
+      diagnose_only:
+        description: 只检查 Cookie 能否读取账号状态（不签到、不兑换、不推送）
+        required: false
+        default: false
+        type: boolean
   schedule:
     # UTC 1点30分(北京时间 9点30分)
     - cron: 30 1 * * *
@@ -9,9 +15,14 @@ on:
   watch:
     types: [started]
 
+concurrency:
+  group: glados-checkin
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       actions: write
       contents: read
@@ -28,8 +39,14 @@ jobs:
       - name: Run checkin
         run: |
           python3 glados.py
-        env: 
+        env:
           GLADOS_COOKIE: "${{ secrets.GLADOS_COOKIE }}"
+          # 必须与生成当前 gld:sess 的浏览器一致，否则服务端设备校验失败
+          GLADOS_USER_AGENT: ${{ vars.GLADOS_USER_AGENT }}
+          GLADOS_COOKIE_ROTATED_AT: ${{ vars.GLADOS_COOKIE_ROTATED_AT }}
+          GLADOS_DIAGNOSE_ONLY: ${{ inputs.diagnose_only && 'true' || 'false' }}
+          CHECKIN_MAX_ATTEMPTS: '3'
+          CHECKIN_RETRY_DELAY_SECONDS: '60'
           BARK_KEY: ${{ secrets.BARK_KEY }}
           FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
           FEISHU_SECRET: ${{ secrets.FEISHU_SECRET }}
@@ -38,4 +55,6 @@ jobs:
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
           # GitHub runner 在墙外，直连官方 API；tg.yaping 反代会被 CF 挑战页拦截
           TG_API_HOST: https://api.telegram.org
-      - uses: liskin/gh-workflow-keepalive@v1
+      - name: Keepalive
+        if: always()
+        uses: liskin/gh-workflow-keepalive@v1
